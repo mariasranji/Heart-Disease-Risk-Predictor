@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Predictor</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 650px; background: white; margin: auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #34495e; }
+        input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { width: 100%; background-color: #e74c3c; color: white; border: none; padding: 12px; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: background 0.2s; }
+        button:hover { background-color: #c0392b; }
+        .results-box { margin-top: 25px; padding: 15px; border-radius: 4px; text-align: center; background-color: #edf2f7; border-left: 5px solid #3182ce; }
+        .high-risk { background-color: #fed7d7; border-left-color: #e53e3e; color: #9b2c2c; }
+        .low-risk { background-color: #c6f6d5; border-left-color: #38a169; color: #22543d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Heart Disease Risk Assessment Tool</h2>
+    
+    <form action="/predict" method="POST">
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="age">Age (years):</label>
+                <input type="number" id="age" name="age" step="1" required value="{{ form_values.age if form_values else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="sex">Sex:</label>
+                <select id="sex" name="sex" required>
+                    <option value="1" {% if form_values and form_values.sex == '1' %}selected{% endif %}>Male</option>
+                    <option value="0" {% if form_values and form_values.sex == '0' %}selected{% endif %}>Female</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="cp">Chest Pain Type (cp):</label>
+                <select id="cp" name="cp" required>
+                    <option value="0" {% if form_values and form_values.cp == '0' %}selected{% endif %}>0: Typical Angina</option>
+                    <option value="1" {% if form_values and form_values.cp == '1' %}selected{% endif %}>1: Atypical Angina</option>
+                    <option value="2" {% if form_values and form_values.cp == '2' %}selected{% endif %}>2: Non-anginal Pain</option>
+                    <option value="3" {% if form_values and form_values.cp == '3' %}selected{% endif %}>3: Asymptomatic</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="trestbps">Resting Blood Pressure (mm Hg):</label>
+                <input type="number" id="trestbps" name="trestbps" step="any" required value="{{ form_values.trestbps if form_values else '' }}">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="chol">Serum Cholesterol (mg/dl):</label>
+                <input type="number" id="chol" name="chol" step="any" required value="{{ form_values.chol if form_values else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="fbs">Fasting Blood Sugar > 120 mg/dl:</label>
+                <select id="fbs" name="fbs" required>
+                    <option value="0" {% if form_values and form_values.fbs == '0' %}selected{% endif %}>False (0)</option>
+                    <option value="1" {% if form_values and form_values.fbs == '1' %}selected{% endif %}>True (1)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="restecg">Resting ECG Results:</label>
+                <select id="restecg" name="restecg" required>
+                    <option value="0" {% if form_values and form_values.restecg == '0' %}selected{% endif %}>0: Normal</option>
+                    <option value="1" {% if form_values and form_values.restecg == '1' %}selected{% endif %}>1: ST-T Wave Abnormality</option>
+                    <option value="2" {% if form_values and form_values.restecg == '2' %}selected{% endif %}>2: Left Ventricular Hypertrophy</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="thalach">Max Heart Rate Achieved (thalach):</label>
+                <input type="number" id="thalach" name="thalach" step="any" required value="{{ form_values.thalach if form_values else '' }}">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="exang">Exercise Induced Angina:</label>
+                <select id="exang" name="exang" required>
+                    <option value="0" {% if form_values and form_values.exang == '0' %}selected{% endif %}>No (0)</option>
+                    <option value="1" {% if form_values and form_values.exang == '1' %}selected{% endif %}>Yes (1)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="oldpeak">ST Depression (oldpeak):</label>
+                <input type="number" id="oldpeak" name="oldpeak" step="0.1" required value="{{ form_values.oldpeak if form_values else '' }}">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="slope">Slope of Peak Exercise ST Segment:</label>
+                <select id="slope" name="slope" required>
+                    <option value="0" {% if form_values and form_values.slope == '0' %}selected{% endif %}>0: Upsloping</option>
+                    <option value="1" {% if form_values and form_values.slope == '1' %}selected{% endif %}>1: Flat</option>
+                    <option value="2" {% if form_values and form_values.slope == '2' %}selected{% endif %}>2: Downsloping</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ca">Major Vessels Colored by Fluoroscopy (ca):</label>
+                <select id="ca" name="ca" required>
+                    <option value="0" {% if form_values and form_values.ca == '0' %}selected{% endif %}>0</option>
+                    <option value="1" {% if form_values and form_values.ca == '1' %}selected{% endif %}>1</option>
+                    <option value="2" {% if form_values and form_values.ca == '2' %}selected{% endif %}>2</option>
+                    <option value="3" {% if form_values and form_values.ca == '3' %}selected{% endif %}>3</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="thal">Thalassemia (thal Status):</label>
+            <select id="thal" name="thal" required>
+                <option value="1" {% if form_values and form_values.thal == '1' %}selected{% endif %}>1: Fixed Defect</option>
+                <option value="2" {% if form_values and form_values.thal == '2' %}selected{% endif %}>2: Normal Flow</option>
+                <option value="3" {% if form_values and form_values.thal == '3' %}selected{% endif %}>3: Reversible Defect</option>
+            </select>
+        </div>
+
+        <button type="submit">Analyze Diagnostic Data</button>
+    </form>
+
+    {% if prediction_text %}
+        <div class="results-box {% if 'High Risk' in prediction_text %}high-risk{% else %}low-risk{% endif %}">
+            <h3>Diagnostic Evaluation Result:</h3>
+            <p style="font-size: 18px; font-weight: bold;">{{ prediction_text }}</p>
+            <p>Calculated Clinical Probability: <strong>{{ probability_text }}</strong></p>
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
